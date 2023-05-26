@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xsi:schemaLocation="http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+	
+	<!-- database.properties 임시 미사용 -->
+	<!-- <context:property-placeholder location="/WEB-INF/config/database.properties" /> -->	
+	<!-- datasource 빈등록 -->
+	<!-- <bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
+   	    <property name="driverClassName" value="${jdbc.driver}"/>
+	    <property name="jdbcUrl" value="${jdbc.url}"/>
+	    <property name="username" value="${jdbc.username}"/>
+	    <property name="password" value="${jdbc.password}"/>
+	</bean> -->
+	
+	<!-- datasource 빈등록(database.properties 관련내용 직접 입력) -->
+	<bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
+   	    <property name="driverClassName" value="net.sf.log4jdbc.sql.jdbcapi.DriverSpy"/>
+	    <property name="jdbcUrl" value="jdbc:log4jdbc:oracle:thin:@127.0.0.1:1521:orcl"/>
+	    <property name="username" value="board"/>
+	    <property name="password" value="1234"/>
+	</bean>	
+	
+	<bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+	    <constructor-arg ref="hikariConfig" />
+	</bean>		
+
+	<!-- 서비스 패키지도 검색 대상에 포함 -->
+	<context:component-scan base-package="com.javalab.logging.service" />
+	<!-- Dao 패키지도 검색 대상에 포함 -->
+	<context:component-scan base-package="com.javalab.logging.dao" />
+		
+	<!-- 마이바티스 관련 설정 사항 추가 -->		
+		
+	<!-- [Dao 매퍼 인터페이스 위치 설정] 
+		1. 매퍼인터페이스 역할 : ServiceImpl 에서 매퍼xml의 쿼리를 호출할 수 있게 연결해줌.
+		base-package 속성 : 베이스 패키지의 모든 인터페이스를 매퍼 인터페이스로 인식
+		annotation 속성 : 베이스 패키지 내의 인터페이스 중에서 지정한 애들만 매퍼 인터페이스로 인식
+		annotation="org.apache.ibatis.annotations.Mapper"
+		 - org.apache.ibatis.annotations 패키지의 Mapper 인터페이스를 지칭
+		2. @Mapper : 매퍼 인터페이스 역할을 하는 인테페이스에 붙여줘야함  -->
+	<mybatis-spring:scan base-package="com.javalab.logging.dao"
+						annotation="org.apache.ibatis.annotations.Mapper"/>
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+ 		<!-- 매퍼.xml(SQL쿼리문) 위치 설정 --> 
+		<property name="mapperLocations" value="classpath:mapper/*Mapper.xml" />
+		<!-- SQL문 실행결과를 받아오거나 파라미터 전달할 때 사용할 vo들의 위치 -->
+		<property name="typeAliasesPackage" value="com.javalab.logging.vo"></property>
+		<!-- vo의 필드명과 SQL문의 select절의 컬럼명이 다를 경우의 처리 -->
+		<property name="configuration">
+			<bean class="org.apache.ibatis.session.Configuration">
+				<property name="mapUnderscoreToCamelCase" value="true"/>
+			</bean>
+		</property>
+	</bean>			
+</beans>
